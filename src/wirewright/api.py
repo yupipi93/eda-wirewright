@@ -21,12 +21,12 @@ from __future__ import annotations
 import base64
 import io
 
-from flask import Flask, request, jsonify, Response
+from flask import Flask, Response, jsonify, request
 
 from . import __version__
 from .config import Config
-from .engine import build, DRCError
-from .loader import load_dict, SchematicError
+from .engine import DRCError, build
+from .loader import SchematicError, load_dict
 from .registry import describe_all
 
 
@@ -131,6 +131,9 @@ def create_app():
     return app
 
 
+_BODY = {"required": True, "content":
+         {"application/json": {"schema": {"$ref": "#/components/schemas/Contract"}}}}
+
 _OPENAPI = {
     "openapi": "3.0.3",
     "info": {"title": "wirewright", "version": __version__,
@@ -138,24 +141,25 @@ _OPENAPI = {
                             "See GET /components for component types and "
                             "https://github.com/yupipi93/eda-wirewright/blob/main/docs/contract-format.md."},
     "paths": {
-        "/components": {"get": {"summary": "List component types, ports and params",
-                                 "responses": {"200": {"description": "catalogue"}}}},
-        "/validate": {"post": {"summary": "Route + DRC only",
-                                "requestBody": {"required": True,
-                                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Contract"}}}},
-                                "responses": {"200": {"description": "ok"},
-                                              "400": {"description": "invalid contract"},
-                                              "422": {"description": "DRC failed"}}}},
-        "/render": {"post": {"summary": "Route + DRC + render to PNG",
-                              "parameters": [{"name": "format", "in": "query", "required": False,
-                                              "schema": {"type": "string", "enum": ["png", "json"]},
-                                              "description": "png (default, image bytes) or json (base64 + report)"}],
-                              "requestBody": {"required": True,
-                                  "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Contract"}}}},
-                              "responses": {"200": {"description": "PNG image or JSON",
-                                                    "content": {"image/png": {}, "application/json": {}}},
-                                            "400": {"description": "invalid contract"},
-                                            "422": {"description": "DRC failed (violations[])"}}}},
+        "/components": {"get": {
+            "summary": "List component types, ports and params",
+            "responses": {"200": {"description": "catalogue"}}}},
+        "/validate": {"post": {
+            "summary": "Route + DRC only",
+            "requestBody": _BODY,
+            "responses": {"200": {"description": "ok"},
+                          "400": {"description": "invalid contract"},
+                          "422": {"description": "DRC failed"}}}},
+        "/render": {"post": {
+            "summary": "Route + DRC + render to PNG",
+            "parameters": [{"name": "format", "in": "query", "required": False,
+                            "schema": {"type": "string", "enum": ["png", "json"]},
+                            "description": "png (image bytes, default) or json (base64 + report)"}],
+            "requestBody": _BODY,
+            "responses": {"200": {"description": "PNG image or JSON",
+                                  "content": {"image/png": {}, "application/json": {}}},
+                          "400": {"description": "invalid contract"},
+                          "422": {"description": "DRC failed (violations[])"}}}},
     },
     "components": {"schemas": {"Contract": {
         "type": "object", "required": ["canvas", "components", "nets"],
