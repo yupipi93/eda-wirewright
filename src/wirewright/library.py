@@ -139,12 +139,12 @@ def led(id, x, y, color, label, sub, r=20, anode="N", cathode="S"):
 
 
 # ── passive buzzer ───────────────────────────────────────────────────────────
-def buzzer(id, x, y, r=32):
+def buzzer(id, x, y, r=32, label="passive buzzer", pin_label="D8"):
     body = BBox(x - r, y - r, x + r, y + r)
     ports = {"sig": Port("sig", x, y - r, "N"), "gnd": Port("gnd", x, y + r, "S")}
     bag = LabelBag()
-    bag.add(x, y + r + 6, "passive buzzer", "pinsm", "mt")
-    bag.add(x, y + r + 24, "D8", "tiny", "mt", C["muted"])
+    bag.add(x, y + r + 6, label, "pinsm", "mt")
+    bag.add(x, y + r + 24, pin_label, "tiny", "mt", C["muted"])
 
     def draw(p):
         p.circle(x, y, r, fill=C["buzz_body"], outline=C["outline"], width=3)
@@ -198,22 +198,24 @@ def spdt_switch(id, x, y, pin_label, com_facing="W", analog=False):
     return Component(id, body, ports, draw, clearance=12, label_boxes=bag.boxes())
 
 
-# ── 2-channel relay module ───────────────────────────────────────────────────
-def relay_module(id, x, y, w2=84):
+# ── relay module (1 or 2 channels) ───────────────────────────────────────────
+def relay_module(id, x, y, w2=84, channels=2):
+    """channels=2 → IN1 + IN2 (the V4 water-pump pair); channels=1 → IN1 only
+    (the 2019 game prototype drove a single relay from one pin)."""
     body = BBox(x - w2, y - 58, x + w2, y + 58)
-    ports = {
-        "IN1": Port("IN1", x - 44, y + 58, "S"),
-        "IN2": Port("IN2", x + 44, y + 58, "S"),
+    ins = (("IN1", -44), ("IN2", 44)) if channels == 2 else (("IN1", -44),)
+    ports = {nm: Port(nm, x + dx, y + 58, "S") for nm, dx in ins}
+    ports.update({
         "VCC": Port("VCC", x - w2, y - 34, "W"),
         "GND": Port("GND", x - w2, y + 4, "W"),
         "OUT": Port("OUT", x, y + 58, "S"),
-    }
+    })
 
     def draw(p):
         p.rrect((x - w2, y - 58, x + w2, y + 58), 10, fill=C["relay_body"], outline=C["outline"], width=3)
-        p.text((x, y - 32), "RELAY ×2", font="pin", fill=C["light"], anchor="mm")
+        p.text((x, y - 32), f"RELAY ×{channels}", font="pin", fill=C["light"], anchor="mm")
         p.text((x, y - 8), "module", font="pinsm", fill=C["light"], anchor="mm")
-        for nm, dx in (("IN1", -44), ("IN2", 44)):
+        for nm, dx in ins:
             _pin(p, x + dx, y + 58, hi=True)
             p.text((x + dx, y + 38), nm, font="tiny", fill=C["light"], anchor="mm")
         _pin(p, x - w2, y - 34); _pin(p, x - w2, y + 4)
@@ -224,11 +226,11 @@ def relay_module(id, x, y, w2=84):
 
 
 # ── water pump ───────────────────────────────────────────────────────────────
-def water_pump(id, x, y):
+def water_pump(id, x, y, note="sprays you on a late miss"):
     body = BBox(x - 66, y - 38, x + 66, y + 38)
     ports = {"in": Port("in", x, y - 38, "N")}
     bag = LabelBag()
-    bag.add(x, y + 44, "sprays you on a late miss", "tiny", "mt", (190, 90, 90))
+    bag.add(x, y + 44, note, "tiny", "mt", (190, 90, 90))
 
     def draw(p):
         p.rrect((x - 66, y - 38, x + 66, y + 38), 10, fill=C["pump"], outline=C["outline"], width=3)
@@ -239,14 +241,46 @@ def water_pump(id, x, y):
     return Component(id, body, ports, draw, clearance=12, label_boxes=bag.boxes())
 
 
-# ── hand-held 5V clip (player) ───────────────────────────────────────────────
-def clip_box(id, x, y):
-    body = BBox(x, y, x + 300, y + 92)
-    ports = {"out": Port("out", x + 300, y + 46, "E")}
+# ── hand-held clip (player) ──────────────────────────────────────────────────
+def clip_box(id, x, y, title="hand-held 5 V clip",
+             sub="held in one hand = the player", w=300, h=92):
+    """Labelled source box for the clip the player holds. Pass title="hand-held
+    GND clip" for the 2019 rigs, where the body pulls the biased pin DOWN."""
+    body = BBox(x, y, x + w, y + h)
+    ports = {"out": Port("out", x + w, y + h // 2, "E")}
 
     def draw(p):
-        p.rrect((x, y, x + 300, y + 92), 12, fill=(250, 244, 200), outline=C["lemon_edge"], width=3)
-        p.text((x + 150, y + 24), "hand-held 5 V clip", font="mod", fill=C["text"], anchor="mm")
-        p.text((x + 150, y + 60), "held in one hand = the player", font="modsub", fill=C["text"], anchor="mm")
+        p.rrect((x, y, x + w, y + h), 12, fill=(250, 244, 200), outline=C["lemon_edge"], width=3)
+        p.text((x + w // 2, y + 24), title, font="mod", fill=C["text"], anchor="mm")
+        p.text((x + w // 2, y + h - 32), sub, font="modsub", fill=C["text"], anchor="mm")
 
     return Component(id, body, ports, draw, clearance=10, is_obstacle=True)
+
+
+# ── HC-SR04 ultrasonic module (the 2019 tutorial rig carried one) ────────────
+def ultrasonic(id, x, y, label="HC-SR04", sub="ultrasonic (code commented out)"):
+    w2, h2 = 96, 54
+    body = BBox(x - w2, y - h2, x + w2, y + h2)
+    ports = {
+        "vcc": Port("vcc", x - 40, y - h2, "N"),
+        "gnd": Port("gnd", x + 40, y + h2, "S"),
+        "trig": Port("trig", x - w2, y - 16, "W"),
+        "echo": Port("echo", x - w2, y + 22, "W"),
+    }
+    bag = LabelBag()
+    bag.add(x, y + h2 + 8, label, "pinsm", "mt")
+    bag.add(x, y + h2 + 26, sub, "tiny", "mt", C["muted"])
+
+    def draw(p):
+        p.rrect((x - w2, y - h2, x + w2, y + h2), 10, fill=(52, 58, 74),
+                outline=C["outline"], width=3)
+        for dx in (-42, 42):                      # the two transducer "eyes"
+            p.circle(x + dx, y, 30, fill=(190, 190, 196), outline=C["outline"], width=3)
+            p.circle(x + dx, y, 12, fill=(120, 120, 128), outline=C["outline"], width=2)
+        for nm, pt in ports.items():
+            _pin(p, pt.x, pt.y, hi=True)
+        p.text((x - w2 + 14, y - h2 + 12), "TRIG", font="tiny", fill=C["light"], anchor="lm")
+        p.text((x - w2 + 14, y + h2 - 12), "ECHO", font="tiny", fill=C["light"], anchor="lm")
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=14, label_boxes=bag.boxes())

@@ -19,6 +19,7 @@ REGISTRY = {
     "relay_module": lib.relay_module,
     "water_pump": lib.water_pump,
     "clip_box": lib.clip_box,
+    "ultrasonic": lib.ultrasonic,
 }
 
 # args whose value is a colour (resolved through theme.resolve_color by the loader)
@@ -33,9 +34,10 @@ DOC = {
     "buzzer": "Passive buzzer; ports 'sig','gnd'.",
     "push_button": "Momentary button; ports 'pin','v5'.",
     "spdt_switch": "SPDT selector; ports 'com','p5','pg'. com_facing 'W'|'E'.",
-    "relay_module": "2-ch relay; ports 'IN1','IN2','VCC','GND','OUT'.",
+    "relay_module": "Relay module; ports 'IN1'[,'IN2'],'VCC','GND','OUT' (channels=1|2).",
     "water_pump": "Pump load; port 'in'.",
     "clip_box": "Hand-held clip / labelled source box; port 'out'.",
+    "ultrasonic": "HC-SR04 ultrasonic module; ports 'vcc','gnd','trig','echo'.",
 }
 
 
