@@ -25,7 +25,8 @@ dependencies = [
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.0"]
-dev = ["pytest>=7", "ruff>=0.1"]
+api = ["flask>=3.0", "gunicorn>=21.0"]
+dev = ["pytest>=7", "ruff>=0.1", "flask>=3.0"]
 
 [project.scripts]
 wirewright = "wirewright.cli:main"

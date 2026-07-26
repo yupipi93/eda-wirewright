@@ -109,6 +109,35 @@ docker run --rm -v "$PWD":/work wirewright render /work/circuit.json -o /work/ci
 docker run --rm wirewright components
 ```
 
+### 4 · HTTP API (hosted — best for agents in the cloud)
+
+`POST` a contract, get a PNG back. Runs on Cloud Run at
+**`https://wirewright.scv.multitecua.com`** (public, no auth — call it from
+anywhere, including agents):
+
+```bash
+# schematic in → PNG out
+curl -X POST https://wirewright.scv.multitecua.com/render \
+     -H 'Content-Type: application/json' \
+     -d @circuit.json -o circuit.png
+
+# DRC only (structured JSON), or the image as base64 for agents:
+curl -X POST https://wirewright.scv.multitecua.com/validate -d @circuit.json -H 'Content-Type: application/json'
+curl -X POST 'https://wirewright.scv.multitecua.com/render?format=json' -d @circuit.json -H 'Content-Type: application/json'
+```
+
+| endpoint | does |
+|---|---|
+| `GET /health` | liveness |
+| `GET /components` | component catalogue (types, ports, params) |
+| `GET /openapi.json` | OpenAPI 3 spec (agents self-configure from this) |
+| `POST /validate` | route + DRC only → JSON (`ok` / `drc_failed` / `invalid_contract`) |
+| `POST /render` | route + DRC + render → `image/png` (or JSON+base64 with `?format=json`) |
+
+Errors are structured JSON with the right status (`400` bad contract, `422` DRC
+failed with `violations[]`), so an agent can fix and retry. Run it yourself:
+`docker build -f deploy/Dockerfile -t wirewright-api . && docker run -p 8080:8080 wirewright-api`.
+
 ## For AI models
 
 wirewright is designed so an LLM can produce diagrams reliably:
