@@ -1,0 +1,14 @@
+.git
+.github
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+*.egg-info
+build
+dist
+tests
+docs
+Makefile
+docker-compose.yml
+*.png

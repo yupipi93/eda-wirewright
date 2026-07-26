@@ -1,0 +1,24 @@
+{
+  "canvas": {"w": 1500, "h": 1000, "title": "LED on D13", "subtitle": "Arduino Nano · one LED + 220 Ω to GND"},
+  "config": {"pitch": 10},
+  "rails": [
+    {"name": "5V",  "y": 200, "x0": 90, "x1": 1400, "color": "red",   "label": "+5 V"},
+    {"name": "GND", "y": 820, "x0": 90, "x1": 1400, "color": "black", "label": "GND"}
+  ],
+  "components": [
+    {"id": "U1",  "type": "arduino_nano", "x": 520, "y": 300},
+    {"id": "D1",  "type": "led",          "x": 980, "y": 360, "args": {"color": "green", "label": "LED", "sub": "D13", "anode": "W"}},
+    {"id": "R1",  "type": "resistor",     "x": 980, "y": 500, "args": {"orient": "V", "label": "220 Ω"}}
+  ],
+  "nets": [
+    {"name": "d13", "color": "led", "nodes": [["port", "U1", "D13"], ["port", "D1", "anode"]]},
+    {"name": "cath", "color": "gnd", "nodes": [["port", "D1", "cathode"], ["port", "R1", "a"]]},
+    {"name": "gnd", "color": "gnd", "nodes": [["port", "R1", "b"], ["rail", "GND"]]},
+    {"name": "pwr", "color": "power", "nodes": [["port", "U1", "5V"], ["rail", "5V"]]},
+    {"name": "grail", "color": "gnd", "nodes": [["port", "U1", "GND"], ["rail", "GND"]]}
+  ],
+  "legend": {
+    "x": 90, "y": 870, "w": 1310, "h": 110,
+    "entries": [["led", "Signal", ["D13 → LED anode"]], ["gnd", "Ground", ["cathode → 220 Ω → GND"]]]
+  }
+}

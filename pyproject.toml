@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wirewright"
+version = "0.1.0"
+description = "Declarative schematic / wiring-diagram engine with an automatic orthogonal router and geometric DRC"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Sergio Conejero" }]
+keywords = ["schematic", "wiring-diagram", "eda", "autorouter", "diagram-as-code", "arduino"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+    "Topic :: Multimedia :: Graphics",
+]
+dependencies = [
+    "Pillow>=9.0",
+]
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.0"]
+dev = ["pytest>=7", "ruff>=0.1"]
+
+[project.scripts]
+wirewright = "wirewright.cli:main"
+wirewright-mcp = "wirewright.mcp_server:main"
+
+[project.urls]
+Homepage = "https://github.com/Yupipi93/eda-wirewright"
+Documentation = "https://github.com/Yupipi93/eda-wirewright#readme"
+Issues = "https://github.com/Yupipi93/eda-wirewright/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wirewright"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/wirewright", "schema", "examples", "docs", "README.md", "LICENSE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+    "E741",   # ambiguous var name 'l' etc. (fine in geometry code)
+    "E702",   # multiple statements per line — used deliberately for tight (x,y) unpacking
+]

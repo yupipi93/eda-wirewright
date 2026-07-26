@@ -1,0 +1,21 @@
+# Convenience compose. The tool is a CLI, so the main service just builds the
+# image and renders whatever is mounted under ./work.
+#
+#   docker compose run --rm render validate /work/schematic.json --json
+#   docker compose run --rm render render   /work/schematic.json -o /work/out.png
+#
+# The `mcp` service runs the stdio MCP server for an AI client that speaks MCP.
+services:
+  render:
+    build: .
+    image: wirewright
+    volumes:
+      - ./:/work
+    working_dir: /work
+
+  mcp:
+    build: .
+    image: wirewright
+    entrypoint: ["wirewright-mcp"]
+    stdin_open: true
+    tty: false
