@@ -34,7 +34,7 @@ from .model import PortRef as P  # short aliases
 from .model import RailRef as R
 from .theme import PALETTE, C, resolve_color
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 __all__ = [
     "Schematic", "Rail", "PortRef", "RailRef", "PointRef", "P", "R", "Pt",

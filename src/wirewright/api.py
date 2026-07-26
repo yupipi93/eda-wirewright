@@ -215,12 +215,23 @@ _LANDING = """<!doctype html>
   td.m{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:13px; white-space:nowrap; }
   footer{ border-top:3px double var(--line); margin-top:40px; padding-top:16px;
           color:var(--muted); font-size:14px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  /* auto dark only when the visitor hasn't picked a theme via the toggle */
   @media (prefers-color-scheme:dark){
-    :root{ --ink:#e9e7df; --paper:#15140f; --line:#e9e7df; --muted:#a7a49a; --faint:#2a2822; }
-    pre{ background:#1b1a14; }
+    :root:not([data-theme]){ --ink:#e9e7df; --paper:#15140f; --line:#e9e7df; --muted:#a7a49a; --faint:#2a2822; }
+    :root:not([data-theme]) pre{ background:#1b1a14; }
   }
+  :root[data-theme="dark"]{ --ink:#e9e7df; --paper:#15140f; --line:#e9e7df; --muted:#a7a49a; --faint:#2a2822; }
+  :root[data-theme="dark"] pre{ background:#1b1a14; }
+  #theme{ position:fixed; top:16px; right:16px; z-index:10;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:12px;
+    background:var(--paper); color:var(--ink); border:1px solid var(--line);
+    border-radius:2px; padding:6px 10px; cursor:pointer; line-height:1;
+    letter-spacing:0.5px; }
+  #theme:hover{ background:var(--faint); }
 </style></head>
-<body><div class="wrap">
+<body>
+  <button id="theme" type="button" aria-label="Toggle light / dark theme">◐ theme</button>
+  <div class="wrap">
   <header><div class="brand">
     <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="2.4">
       <rect x="7" y="7" width="38" height="38" rx="3"/>
@@ -265,7 +276,24 @@ _LANDING = """<!doctype html>
     <span>renders on Cloud Run · stateless · MIT</span>
     <span><a href="https://github.com/yupipi93/eda-wirewright">github.com/yupipi93/eda-wirewright</a></span>
   </footer>
-</div></body></html>"""
+  </div>
+  <script>
+  (function(){
+    var root=document.documentElement, btn=document.getElementById('theme');
+    function eff(){ return root.getAttribute('data-theme') ||
+      (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light'); }
+    function label(){ btn.textContent = eff()==='dark' ? '☀ light' : '☾ dark'; }
+    try{ var s=localStorage.getItem('ww-theme'); if(s){ root.setAttribute('data-theme', s); } }catch(e){}
+    label();
+    btn.addEventListener('click', function(){
+      var next = eff()==='dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try{ localStorage.setItem('ww-theme', next); }catch(e){}
+      label();
+    });
+  })();
+  </script>
+</body></html>"""
 
 
 app = create_app()
