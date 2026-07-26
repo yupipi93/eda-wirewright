@@ -11,6 +11,10 @@ Built to be driven by humans *and* by AI models: alongside the Python API there
 is a declarative **JSON contract format**, a **CLI**, and an **MCP server** so an
 agent (e.g. Claude) can call it as a tool.
 
+> **☁️ Live API:** **`https://wirewright.scv.multitecua.com`** — `POST` a contract,
+> get a PNG. Public, no auth, agent-ready. Open it in a browser for the landing
+> page; see [Hosted API](#4--http-api-hosted--best-for-agents-in-the-cloud) below.
+
 ```
                  wirewright render circuit.json -o circuit.png
    contract  ──────────────────────────────────────────────────►  clean PNG
@@ -128,6 +132,7 @@ curl -X POST 'https://wirewright.scv.multitecua.com/render?format=json' -d @circ
 
 | endpoint | does |
 |---|---|
+| `GET /` | landing page in a browser (HTML) · JSON for API clients |
 | `GET /health` | liveness |
 | `GET /components` | component catalogue (types, ports, params) |
 | `GET /openapi.json` | OpenAPI 3 spec (agents self-configure from this) |
@@ -135,7 +140,8 @@ curl -X POST 'https://wirewright.scv.multitecua.com/render?format=json' -d @circ
 | `POST /render` | route + DRC + render → `image/png` (or JSON+base64 with `?format=json`) |
 
 Errors are structured JSON with the right status (`400` bad contract, `422` DRC
-failed with `violations[]`), so an agent can fix and retry. Run it yourself:
+failed with `violations[]`), so an agent can fix and retry. Open the base URL in a
+browser for a minimal landing page (usage + links). Run it yourself:
 `docker build -f deploy/Dockerfile -t wirewright-api . && docker run -p 8080:8080 wirewright-api`.
 
 ## For AI models

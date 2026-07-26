@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wirewright"
-version = "0.1.0"
+version = "0.1.1"
 description = "Declarative schematic / wiring-diagram engine with an automatic orthogonal router and geometric DRC"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -57,3 +57,6 @@ ignore = [
     "E741",   # ambiguous var name 'l' etc. (fine in geometry code)
     "E702",   # multiple statements per line — used deliberately for tight (x,y) unpacking
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"src/wirewright/api.py" = ["E501"]   # long lines inside the inline HTML/curl landing string

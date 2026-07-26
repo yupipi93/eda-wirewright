@@ -82,7 +82,7 @@ def create_app():
 
     @app.get("/")
     def root():
-        return {
+        info = {
             "service": "wirewright",
             "version": __version__,
             "description": "Declarative schematic engine — POST a contract, get a wiring-diagram PNG.",
@@ -96,6 +96,10 @@ def create_app():
                        "-d @schematic.json -o out.png",
             "docs": "https://github.com/yupipi93/eda-wirewright",
         }
+        # Browsers get a human landing page; API clients get JSON.
+        if "text/html" in request.headers.get("Accept", ""):
+            return Response(_LANDING.replace("__VERSION__", __version__), mimetype="text/html")
+        return info
 
     @app.get("/components")
     def components():
@@ -172,6 +176,96 @@ _OPENAPI = {
         "description": "Declarative schematic. Full field reference: docs/contract-format.md",
     }}},
 }
+
+
+_LANDING = """<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wirewright — schematic engine</title>
+<style>
+  :root{ --ink:#141414; --paper:#f4f3ee; --line:#141414; --muted:#5b5b57; --faint:#dedcd3; }
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.55; font-size:17px;
+    background-image:radial-gradient(var(--faint) 0.5px, transparent 0.5px);
+    background-size:4px 4px;            /* subtle e-ink dither */
+  }
+  .wrap{ max-width:720px; margin:0 auto; padding:56px 24px 72px; }
+  header{ border-bottom:3px double var(--line); padding-bottom:18px; margin-bottom:26px; }
+  .brand{ display:flex; align-items:center; gap:16px; }
+  .brand svg{ flex:none; }
+  h1{ font-size:40px; letter-spacing:-0.5px; margin:0; font-weight:700; }
+  .tag{ margin:6px 0 0; font-style:italic; color:var(--muted); }
+  .ver{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:12px;
+        border:1px solid var(--line); border-radius:2px; padding:1px 6px; font-style:normal; }
+  h2{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:12px;
+      letter-spacing:2px; text-transform:uppercase; color:var(--muted);
+      margin:34px 0 12px; }
+  p{ margin:0 0 14px; } a{ color:var(--ink); text-decoration:underline; text-underline-offset:2px; }
+  pre{ background:#fbfaf6; border:1px solid var(--line); border-radius:3px;
+       padding:14px 16px; overflow-x:auto; font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+       font-size:13px; line-height:1.5; margin:0 0 14px; }
+  code{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:0.85em; }
+  table{ width:100%; border-collapse:collapse; margin:0 0 14px; font-size:15px; }
+  td{ border-top:1px solid var(--faint); padding:8px 6px; vertical-align:top; }
+  td.m{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:13px; white-space:nowrap; }
+  footer{ border-top:3px double var(--line); margin-top:40px; padding-top:16px;
+          color:var(--muted); font-size:14px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  @media (prefers-color-scheme:dark){
+    :root{ --ink:#e9e7df; --paper:#15140f; --line:#e9e7df; --muted:#a7a49a; --faint:#2a2822; }
+    pre{ background:#1b1a14; }
+  }
+</style></head>
+<body><div class="wrap">
+  <header><div class="brand">
+    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="2.4">
+      <rect x="7" y="7" width="38" height="38" rx="3"/>
+      <path d="M7 19 H1 M7 33 H1 M45 19 H51 M45 33 H51 M19 7 V1 M33 7 V1 M19 45 V51 M33 45 V51"/>
+      <circle cx="26" cy="26" r="4.5" fill="currentColor" stroke="none"/>
+    </svg>
+    <div><h1>wirewright</h1>
+      <p class="tag">declarative schematic engine · auto-router + DRC <span class="ver">v__VERSION__</span></p>
+    </div>
+  </div></header>
+
+  <p>Describe <em>what connects to what</em> — components, typed ports, nets — and wirewright
+     works out <em>how to draw it</em>: clean orthogonal wires that never cross a component
+     body, never run on top of each other, never leave a pin unconnected, and keep their
+     distance. Every diagram is <strong>design-rule-checked before it is returned</strong>.</p>
+
+  <h2>Try it</h2>
+  <pre>curl -X POST https://wirewright.scv.multitecua.com/render \\
+     -H 'Content-Type: application/json' \\
+     -d @circuit.json -o circuit.png</pre>
+  <p>Agents: add <code>?format=json</code> to get the PNG as base64 plus the DRC report,
+     or <code>POST /validate</code> for the DRC result alone. Discover the parts with
+     <code>GET /components</code>; self-configure from <code>GET /openapi.json</code>.</p>
+
+  <h2>Endpoints</h2>
+  <table>
+    <tr><td class="m">POST /render</td><td>route + DRC + render → <code>image/png</code> (or JSON+base64 with <code>?format=json</code>)</td></tr>
+    <tr><td class="m">POST /validate</td><td>route + DRC only → JSON (<code>ok</code> / <code>drc_failed</code> / <code>invalid_contract</code>)</td></tr>
+    <tr><td class="m">GET /components</td><td>component catalogue — types, ports, params</td></tr>
+    <tr><td class="m">GET /openapi.json</td><td>OpenAPI 3 spec</td></tr>
+    <tr><td class="m">GET /health</td><td>liveness</td></tr>
+  </table>
+
+  <h2>The contract</h2>
+  <p>A schematic is a small JSON object (<code>canvas</code>, <code>rails</code>,
+     <code>components</code>, <code>nets</code>). Errors come back structured and fixable —
+     <em>"D1 has no port 'anodX' (has: anode, cathode)"</em> — so a caller can correct and
+     retry. Full reference and examples on
+     <a href="https://github.com/yupipi93/eda-wirewright/blob/main/docs/contract-format.md">GitHub</a>.</p>
+
+  <footer>
+    <span>renders on Cloud Run · stateless · MIT</span>
+    <span><a href="https://github.com/yupipi93/eda-wirewright">github.com/yupipi93/eda-wirewright</a></span>
+  </footer>
+</div></body></html>"""
 
 
 app = create_app()
