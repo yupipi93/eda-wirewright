@@ -14,6 +14,7 @@ venv/
 examples/out/
 *.png
 !docs/**/*.png
+!src/wirewright/static/*.png
 
 # OS / editor
 .DS_Store
