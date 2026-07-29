@@ -20,6 +20,10 @@ REGISTRY = {
     "water_pump": lib.water_pump,
     "clip_box": lib.clip_box,
     "ultrasonic": lib.ultrasonic,
+    "capacitor": lib.capacitor,
+    "inductor": lib.inductor,
+    "diode": lib.diode,
+    "power_jack": lib.power_jack,
 }
 
 # args whose value is a colour (resolved through theme.resolve_color by the loader)
@@ -38,6 +42,10 @@ DOC = {
     "water_pump": "Pump load; port 'in'.",
     "clip_box": "Hand-held clip / labelled source box; port 'out'.",
     "ultrasonic": "HC-SR04 ultrasonic module; ports 'vcc','gnd','trig','echo'.",
+    "capacitor": "Capacitor; ports 'a','b' ('a' is + when polarized). orient 'H'|'V'.",
+    "inductor": "Power choke / ferrite; ports 'a','b'. orient 'H'|'V'.",
+    "diode": "Diode (rectifier/Schottky/TVS); ports 'anode','cathode'. orient 'H'|'V'.",
+    "power_jack": "Power source box; ports 'vout','gnd' on the E side.",
 }
 
 

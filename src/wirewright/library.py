@@ -257,6 +257,142 @@ def clip_box(id, x, y, title="hand-held 5 V clip",
     return Component(id, body, ports, draw, clearance=10, is_obstacle=True)
 
 
+# ── capacitor (2-terminal; radial can when polarized, disc when not) ─────────
+def capacitor(id, x, y, orient="V", label="100 nF", sub="", polarized=False):
+    """Drawn as the real part: a radial electrolytic can (polarized=True, with the
+    minus stripe) or a ceramic disc. Ports 'a' (+ when polarized) and 'b'."""
+    r = 26 if polarized else 18
+    body = BBox(x - r, y - r, x + r, y + r)
+    if orient == "V":
+        ports = {"a": Port("a", x, y - r, "N"), "b": Port("b", x, y + r, "S")}
+    else:
+        ports = {"a": Port("a", x - r, y, "W"), "b": Port("b", x + r, y, "E")}
+    bag = LabelBag()
+    bag.add(x + r + 10, y - 9 if sub else y, label, "pinsm", "lm")
+    if sub:
+        bag.add(x + r + 10, y + 10, sub, "tiny", "lm", C["muted"])
+
+    def draw(p):
+        if polarized:
+            p.circle(x, y, r, fill=(58, 62, 86), outline=C["outline"], width=3)
+            p.circle(x, y, r - 9, fill=(74, 80, 108), outline=C["outline"], width=1)
+            stripe_x = x + (r - 5 if orient == "V" else 0)
+            stripe_y = y if orient == "V" else y + r - 5
+            p.text((stripe_x, stripe_y), "−", font="tiny", fill=C["light"], anchor="mm")
+            pa = ports["a"]
+            p.text((pa.x - 12 if orient == "V" else pa.x, pa.y if orient == "V" else pa.y - 12),
+                   "+", font="pinsm", fill=C["text"], anchor="mm")
+        else:
+            p.circle(x, y, r, fill=(220, 150, 90), outline=C["outline"], width=3)
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=10, label_boxes=bag.boxes())
+
+
+# ── inductor / ferrite (2-terminal power choke) ──────────────────────────────
+def inductor(id, x, y, orient="H", label="100 µH", sub="", length=90):
+    """Drawn as a wound drum choke: a rounded body with winding bands. Ports
+    'a' and 'b'. Use it for filter chokes and ferrite beads alike."""
+    half = length / 2
+    bag = LabelBag()
+    if orient == "H":
+        body = BBox(x - half, y - 20, x + half, y + 20)
+        ports = {"a": Port("a", x - half, y, "W"), "b": Port("b", x + half, y, "E")}
+        bag.add(x, y - 34, label, "pinsm", "mm")
+        if sub:
+            bag.add(x, y + 34, sub, "tiny", "mt", C["muted"])
+    else:
+        body = BBox(x - 20, y - half, x + 20, y + half)
+        ports = {"a": Port("a", x, y - half, "N"), "b": Port("b", x, y + half, "S")}
+        bag.add(x - 24, y, label, "pinsm", "rm")
+        if sub:
+            bag.add(x + 24, y, sub, "tiny", "lm", C["muted"])
+
+    def draw(p):
+        if orient == "H":
+            p.rrect((x - half, y - 18, x + half, y + 18), 16, fill=(96, 78, 60),
+                    outline=C["outline"], width=3)
+            for i in range(-2, 3):                      # winding bands
+                bx = x + i * 16
+                p.line([(bx - 5, y - 16), (bx + 5, y + 16)], fill=(140, 116, 88), width=4)
+        else:
+            p.rrect((x - 18, y - half, x + 18, y + half), 16, fill=(96, 78, 60),
+                    outline=C["outline"], width=3)
+            for i in range(-2, 3):
+                by = y + i * 16
+                p.line([(x - 16, by - 5), (x + 16, by + 5)], fill=(140, 116, 88), width=4)
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=10, label_boxes=bag.boxes())
+
+
+# ── diode (rectifier / Schottky / TVS clamp) ─────────────────────────────────
+def diode(id, x, y, orient="H", label="1N5817", sub="", length=64, flip=False):
+    """Drawn as the real axial part: dark body with the cathode band. Ports
+    'anode' and 'cathode' (same names as led). orient 'H' puts the anode W and
+    the cathode E; orient 'V' puts the anode N and the cathode S. flip=True
+    swaps the two ends (band follows the cathode) — e.g. a TVS clamp hanging
+    off a supply line needs its cathode UP."""
+    half = length / 2
+    bag = LabelBag()
+    if orient == "H":
+        body = BBox(x - half, y - 14, x + half, y + 14)
+        a_end, k_end = ((x + half, "E"), (x - half, "W")) if flip else \
+                       ((x - half, "W"), (x + half, "E"))
+        ports = {"anode": Port("anode", a_end[0], y, a_end[1]),
+                 "cathode": Port("cathode", k_end[0], y, k_end[1])}
+        bag.add(x, y - 28, label, "pinsm", "mm")
+        if sub:
+            bag.add(x, y + 28, sub, "tiny", "mt", C["muted"])
+    else:
+        body = BBox(x - 14, y - half, x + 14, y + half)
+        a_end, k_end = ((y + half, "S"), (y - half, "N")) if flip else \
+                       ((y - half, "N"), (y + half, "S"))
+        ports = {"anode": Port("anode", x, a_end[0], a_end[1]),
+                 "cathode": Port("cathode", x, k_end[0], k_end[1])}
+        bag.add(x - 18, y, label, "pinsm", "rm")
+        if sub:
+            bag.add(x + 18, y, sub, "tiny", "lm", C["muted"])
+
+    def draw(p):
+        if orient == "H":
+            p.rrect((x - half, y - 12, x + half, y + 12), 6, fill=(40, 40, 46),
+                    outline=C["outline"], width=3)
+            kx = x - half + 16 if flip else x + half - 16
+            p.line([(kx, y - 12), (kx, y + 12)],
+                   fill=(230, 230, 235), width=6)      # cathode band
+        else:
+            p.rrect((x - 12, y - half, x + 12, y + half), 6, fill=(40, 40, 46),
+                    outline=C["outline"], width=3)
+            ky = y - half + 16 if flip else y + half - 16
+            p.line([(x - 12, ky), (x + 12, ky)],
+                   fill=(230, 230, 235), width=6)
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=10, label_boxes=bag.boxes())
+
+
+# ── power entry jack (labelled source box with V+ and GND ports) ─────────────
+def power_jack(id, x, y, title="5 V IN", sub="USB charger / pigtail",
+               w=300, h=92):
+    """Power source box (like clip_box but with BOTH supply terminals): port
+    'vout' (upper) and 'gnd' (lower) on the E side."""
+    body = BBox(x, y, x + w, y + h)
+    ports = {"vout": Port("vout", x + w, y + h // 3, "E"),
+             "gnd": Port("gnd", x + w, y + 2 * h // 3, "E")}
+
+    def draw(p):
+        p.rrect((x, y, x + w, y + h), 12, fill=(214, 226, 214), outline=C["outline"], width=3)
+        p.text((x + w // 2 - 20, y + 24), title, font="mod", fill=C["text"], anchor="mm")
+        p.text((x + w // 2 - 20, y + h - 32), sub, font="modsub", fill=C["text"], anchor="mm")
+        for nm, lbl in (("vout", "V+"), ("gnd", "G")):
+            pt = ports[nm]
+            _pin(p, pt.x, pt.y, hi=True)
+            p.text((pt.x - 14, pt.y), lbl, font="tiny", fill=C["text"], anchor="rm")
+
+    return Component(id, body, ports, draw, clearance=12, is_obstacle=True)
+
+
 # ── HC-SR04 ultrasonic module (the 2019 tutorial rig carried one) ────────────
 def ultrasonic(id, x, y, label="HC-SR04", sub="ultrasonic (code commented out)"):
     w2, h2 = 96, 54

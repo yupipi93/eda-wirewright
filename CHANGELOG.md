@@ -2,6 +2,16 @@
 
 All notable changes to wirewright. Format loosely follows Keep a Changelog.
 
+## [Unreleased]
+
+### Added
+- **Power-entry component family** in the library: `capacitor` (radial can /
+  ceramic disc, `polarized` flag), `inductor` (drum choke), `diode` (axial body
+  with cathode band, `flip` to swap ends — TVS clamps hang cathode-up) and
+  `power_jack` (source box with `vout`/`gnd`). Registered + self-describing;
+  covered by `tests/test_power_components.py`. First consumer:
+  arduino-lemon-piano V5.5's filtered-supply diagram.
+
 ## [0.1.3] — 2026-07-29
 
 ### Added
