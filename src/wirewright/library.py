@@ -257,6 +257,52 @@ def clip_box(id, x, y, title="hand-held 5 V clip",
     return Component(id, body, ports, draw, clearance=10, is_obstacle=True)
 
 
+# ── KY-040 rotary encoder (with pushbutton) ──────────────────────────────────
+def rotary_encoder(id, x, y, label="KY-040 rotary encoder",
+                   sub="20 pulses/rev · 5 V", with_sw=True):
+    """Encoder module on a small PCB: knob on the right, header on the left.
+    Ports: 'vcc' (N), 'gnd' (S), 'clk' + 'dt' (W) and, unless with_sw=False,
+    'sw' (W) for the shaft pushbutton. Set with_sw=False when the design leaves
+    the pushbutton unconnected — the pin is still drawn, greyed, but it is not a
+    port, so the DRC does not demand a wire for it."""
+    w2, h2 = 96, 76
+    body = BBox(x - w2, y - h2, x + w2, y + h2)
+    ports = {
+        "vcc": Port("vcc", x - 30, y - h2, "N"),
+        "gnd": Port("gnd", x - 30, y + h2, "S"),
+        "clk": Port("clk", x - w2, y - 34, "W"),
+        "dt":  Port("dt",  x - w2, y, "W"),
+    }
+    if with_sw:
+        ports["sw"] = Port("sw", x - w2, y + 34, "W")
+    bag = LabelBag()
+    bag.add(x, y + h2 + 8, label, "pinsm", "mt")
+    bag.add(x, y + h2 + 26, sub, "tiny", "mt", C["muted"])
+
+    def draw(p):
+        p.rrect((x - w2, y - h2, x + w2, y + h2), 10, fill=(38, 74, 52),
+                outline=C["outline"], width=3)
+        # the knob: shaft boss + fluted cap
+        p.circle(x + 40, y, 46, fill=(70, 70, 76), outline=C["outline"], width=3)
+        p.circle(x + 40, y, 30, fill=(120, 120, 128), outline=C["outline"], width=2)
+        for dx, dy in ((0, -30), (0, 30), (-30, 0), (30, 0)):
+            p.line([(x + 40 + dx * 0.6, y + dy * 0.6),
+                    (x + 40 + dx, y + dy)], fill=C["outline"], width=2)
+        # turn arrows
+        p.text((x + 40, y - 60), "↻", font="pin", fill=C["light"], anchor="mm")
+        # header pins, labelled inside the board
+        for nm, py, shown in (("CLK", y - 34, True), ("DT", y, True),
+                              ("SW", y + 34, with_sw)):
+            _pin(p, x - w2, py, hi=shown)
+            p.text((x - w2 + 16, py), nm if shown else "SW —",
+                   font="tiny", fill=C["light"] if shown else C["muted"], anchor="lm")
+        _pin(p, x - 30, y - h2, hi=True)
+        _pin(p, x - 30, y + h2, hi=True)
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=14, label_boxes=bag.boxes())
+
+
 # ── HC-SR04 ultrasonic module (the 2019 tutorial rig carried one) ────────────
 def ultrasonic(id, x, y, label="HC-SR04", sub="ultrasonic (code commented out)"):
     w2, h2 = 96, 54

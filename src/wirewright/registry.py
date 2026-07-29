@@ -20,6 +20,7 @@ REGISTRY = {
     "water_pump": lib.water_pump,
     "clip_box": lib.clip_box,
     "ultrasonic": lib.ultrasonic,
+    "rotary_encoder": lib.rotary_encoder,
 }
 
 # args whose value is a colour (resolved through theme.resolve_color by the loader)
@@ -38,6 +39,7 @@ DOC = {
     "water_pump": "Pump load; port 'in'.",
     "clip_box": "Hand-held clip / labelled source box; port 'out'.",
     "ultrasonic": "HC-SR04 ultrasonic module; ports 'vcc','gnd','trig','echo'.",
+    "rotary_encoder": "KY-040 encoder; ports 'vcc','gnd','clk','dt'[,'sw'] (with_sw).",
 }
 
 
