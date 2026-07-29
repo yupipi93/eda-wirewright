@@ -210,6 +210,10 @@ _LANDING = """<!doctype html>
        padding:14px 16px; overflow-x:auto; font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
        font-size:13px; line-height:1.5; margin:0 0 14px; }
   code{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:0.85em; }
+  figure{ margin:0 0 22px; }
+  figure a{ display:block; border:1px solid var(--line); border-radius:3px; background:#fff; }
+  figure img{ display:block; width:100%; height:auto; }
+  figcaption{ font-size:14px; color:var(--muted); font-style:italic; margin-top:8px; }
   table{ width:100%; border-collapse:collapse; margin:0 0 14px; font-size:15px; }
   td{ border-top:1px solid var(--faint); padding:8px 6px; vertical-align:top; }
   td.m{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:13px; white-space:nowrap; }
@@ -247,6 +251,25 @@ _LANDING = """<!doctype html>
      works out <em>how to draw it</em>: clean orthogonal wires that never cross a component
      body, never run on top of each other, never leave a pin unconnected, and keep their
      distance. Every diagram is <strong>design-rule-checked before it is returned</strong>.</p>
+
+  <h2>Real output</h2>
+  <figure>
+    <a href="/static/lemon-piano-v5.png" title="Open full size">
+      <img src="/static/lemon-piano-v5.png" loading="lazy"
+           alt="Lemon Piano V5 wiring diagram — Arduino Nano, 7 touch keys, ten-LED bar, buzzer — rendered by wirewright"></a>
+    <figcaption>The <a href="https://github.com/yupipi93/arduino-lemon-piano">Lemon&nbsp;Piano</a> V5
+      wiring — seven touch keys, a ten-LED bar, live sensitivity buttons, buzzer — auto-routed and
+      DRC-validated by wirewright from a declarative contract. Never hand-drawn. Click for full size.</figcaption>
+  </figure>
+  <figure>
+    <a href="/static/oscilloscope-m6.png" title="Open full size">
+      <img src="/static/oscilloscope-m6.png" loading="lazy"
+           alt="Arduino oscilloscope M6 dual-channel wiring diagram — the hand-placed style wirewright automates"></a>
+    <figcaption>For reference, the style wirewright grew out of: the
+      <a href="https://github.com/yupipi93/arduino-oscilloscope-PG240128-A">Arduino oscilloscope</a>
+      M6 dual-channel wiring, hand-placed pin by pin before wirewright existed. wirewright produces
+      this look automatically — with routing and DRC guaranteed.</figcaption>
+  </figure>
 
   <h2>Try it</h2>
   <pre>curl -X POST https://wirewright.scv.multitecua.com/render \\

@@ -2,6 +2,14 @@
 
 All notable changes to wirewright. Format loosely follows Keep a Changelog.
 
+## [0.1.3] — 2026-07-29
+
+### Added
+- **Landing page examples** (`GET /` HTML): a "Real output" section with two
+  static images served from the package (`/static/…`) — the Lemon Piano V5
+  wiring (rendered by wirewright, DRC-validated) and, for reference, the
+  hand-placed Arduino oscilloscope M6 diagram whose style wirewright automates.
+
 ## [0.1.0] — 2026-07-26
 
 First release. Extracted from the arduino-lemon-piano project into a standalone,
