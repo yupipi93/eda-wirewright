@@ -43,5 +43,6 @@ jobs:
       - name: Smoke-test image
         run: |
           docker run --rm wirewright components
+          mkdir -p examples/out
           docker run --rm -v "$PWD/examples":/work wirewright \
             render /work/json/led_blink.json -o /work/out/led_blink.png --json
