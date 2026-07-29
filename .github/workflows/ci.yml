@@ -44,5 +44,7 @@ jobs:
         run: |
           docker run --rm wirewright components
           mkdir -p examples/out
-          docker run --rm -v "$PWD/examples":/work wirewright \
+          # the image runs as its own non-root user; match the host uid so it
+          # can write into the mounted examples/out
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD/examples":/work wirewright \
             render /work/json/led_blink.json -o /work/out/led_blink.png --json
