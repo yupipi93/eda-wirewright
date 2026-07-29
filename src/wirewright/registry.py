@@ -21,6 +21,10 @@ REGISTRY = {
     "clip_box": lib.clip_box,
     "ultrasonic": lib.ultrasonic,
     "rotary_encoder": lib.rotary_encoder,
+    "capacitor": lib.capacitor,
+    "inductor": lib.inductor,
+    "diode": lib.diode,
+    "power_jack": lib.power_jack,
 }
 
 # args whose value is a colour (resolved through theme.resolve_color by the loader)
@@ -40,6 +44,10 @@ DOC = {
     "clip_box": "Hand-held clip / labelled source box; port 'out'.",
     "ultrasonic": "HC-SR04 ultrasonic module; ports 'vcc','gnd','trig','echo'.",
     "rotary_encoder": "KY-040 encoder; ports 'vcc','gnd','clk','dt'[,'sw'] (with_sw).",
+    "capacitor": "Capacitor; ports 'a','b' ('a' is + when polarized). orient 'H'|'V'.",
+    "inductor": "Power choke / ferrite; ports 'a','b'. orient 'H'|'V'.",
+    "diode": "Diode (rectifier/Schottky/TVS); ports 'anode','cathode'. orient 'H'|'V'.",
+    "power_jack": "Power source box; ports 'vout','gnd' on the E side.",
 }
 
 
