@@ -25,6 +25,10 @@ REGISTRY = {
     "inductor": lib.inductor,
     "diode": lib.diode,
     "power_jack": lib.power_jack,
+    "battery": lib.battery,
+    "power_bank_module": lib.power_bank_module,
+    "amp_module": lib.amp_module,
+    "speaker": lib.speaker,
 }
 
 # args whose value is a colour (resolved through theme.resolve_color by the loader)
@@ -48,6 +52,12 @@ DOC = {
     "inductor": "Power choke / ferrite; ports 'a','b'. orient 'H'|'V'.",
     "diode": "Diode (rectifier/Schottky/TVS); ports 'anode','cathode'. orient 'H'|'V'.",
     "power_jack": "Power source box; ports 'vout','gnd' on the E side.",
+    "battery": "Single-cell Li-ion/LiPo pack; ports 'pos','neg' on the E side.",
+    "power_bank_module": ("Boost + charger module with a % gauge (IP5356-class); "
+                          "ports 'batp','batn' (W) and 'vout','gnd' (E)."),
+    "amp_module": ("Mono audio power amp breakout (LM386-class); ports 'sig' (W), "
+                   "'vcc' (N), 'gnd' (S), 'out' (E)."),
+    "speaker": "Moving-coil loudspeaker; ports 'p','n' on the W side.",
 }
 
 

@@ -33,6 +33,33 @@ def legend(x, y, w, h, entries, notes=()):
     return draw
 
 
+def panel(x, y, w, h, title, rows, accent=None):
+    """A titled text box for prose that belongs ON the drawing rather than in the
+    legend — a mode table, a build warning, an operating note.
+
+    `rows` items: `""` (blank line) · `("h", text)` (sub-heading, accent colour)
+    · `text` or `(text, colour)` (body line).
+    """
+    def draw(p):
+        p.rrect((x, y, x + w, y + h), 12, fill=(255, 255, 255),
+                outline=C["outline"], width=2)
+        p.rrect((x, y, x + w, y + 6), 3, fill=accent or C["outline"])
+        p.text((x + 20, y + 20), title, font="leg", fill=C["text"], anchor="lt")
+        ly = y + 58
+        for r in rows:
+            if not r:
+                ly += 12
+                continue
+            if isinstance(r, tuple) and r[0] == "h":
+                p.text((x + 20, ly), r[1], font="leg", fill=accent or C["text"], anchor="lt")
+                ly += 26
+                continue
+            txt, colr = r if isinstance(r, tuple) else (r, C["text"])
+            p.text((x + 20, ly), txt, font="legsm", fill=colr, anchor="lt")
+            ly += 21
+    return draw
+
+
 def note(x, y, text, color=None, font="pinsm", anchor="lm"):
     color = color or C["text"]
     return lambda p: p.text((x, y), text, font=font, fill=color, anchor=anchor)

@@ -5,6 +5,25 @@ All notable changes to wirewright. Format loosely follows Keep a Changelog.
 ## [Unreleased]
 
 ### Added
+- **Battery + audio component family** in the library: `battery` (1S Li-ion /
+  LiPo pouch with its two soldered leads, ports `pos`/`neg`),
+  `power_bank_module` (IP5356-class boost + charger with a 2-digit fuel gauge,
+  ports `batp`/`batn` west and `vout`/`gnd` east — the enable button and charge
+  connector are drawn but are deliberately *not* ports, so the DRC does not
+  demand wires for them), `amp_module` (LM386-class mono breakout with gain
+  trimmer and speaker screw terminal, ports `sig`/`vcc`/`gnd`/`out`) and
+  `speaker` (moving-coil driver, ports `p`/`n`). Registered + self-describing;
+  covered by `tests/test_battery_audio_components.py`. First consumer:
+  arduino-lemon-piano V6's battery + amplified-speaker diagram.
+  - `amp_module`'s `gnd` port sits 112 px east of centre on purpose: its caption
+    is centred under the same edge, and a centred port's escape stub struck
+    through the text (caught in V6's first render, now a regression test).
+- **`deco.panel(x, y, w, h, title, rows, accent=…)`** — a titled text box for
+  prose that belongs *on* the drawing rather than in the legend: a mode table, a
+  build warning, an operating note. `rows` accepts `""` for a blank line,
+  `("h", text)` for an accent-coloured sub-heading, and `text` or
+  `(text, colour)` for body lines.
+
 - **Power-entry component family** in the library: `capacitor` (radial can /
   ceramic disc, `polarized` flag), `inductor` (drum choke), `diode` (axial body
   with cathode band, `flip` to swap ends — TVS clamps hang cathode-up) and

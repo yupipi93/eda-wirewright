@@ -466,3 +466,168 @@ def ultrasonic(id, x, y, label="HC-SR04", sub="ultrasonic (code commented out)")
         bag.draw(p)
 
     return Component(id, body, ports, draw, clearance=14, label_boxes=bag.boxes())
+
+
+# ── single-cell Li-ion / LiPo pack ───────────────────────────────────────────
+def battery(id, x, y, label="LiPo 3.7 V", sub="10 000 mAh", cells="1S",
+            w=340, h=136):
+    """Drawn as the real part: a foil pouch with the two leads soldered straight
+    to the cell. Ports 'pos' (red, upper) and 'neg' (black, lower) on the E
+    side — the order the leads leave a 1260110-style pack."""
+    body = BBox(x, y, x + w, y + h)
+    ports = {"pos": Port("pos", x + w, y + h // 3, "E"),
+             "neg": Port("neg", x + w, y + 2 * h // 3, "E")}
+
+    def draw(p):
+        p.rrect((x, y, x + w, y + h), 12, fill=(226, 198, 108),
+                outline=(156, 128, 40), width=3)
+        # the silver spec label every pouch carries in the middle of the foil
+        p.rrect((x + 34, y + 30, x + w - 78, y + h - 30), 6, fill=(232, 232, 236),
+                outline=(150, 150, 156), width=2)
+        p.text((x + w // 2 - 22, y + h // 2 - 12), label, font="mod",
+               fill=C["text"], anchor="mm")
+        p.text((x + w // 2 - 22, y + h // 2 + 12), sub, font="modsub",
+               fill=C["text"], anchor="mm")
+        p.text((x + 14, y + 16), cells, font="tiny", fill=(120, 96, 20), anchor="lm")
+        for nm, lbl, col in (("pos", "+", (200, 40, 40)), ("neg", "−", (40, 40, 46))):
+            pt = ports[nm]
+            _pin(p, pt.x, pt.y, hi=True)
+            p.text((pt.x - 16, pt.y), lbl, font="pin", fill=col, anchor="rm")
+
+    return Component(id, body, ports, draw, clearance=12, is_obstacle=True)
+
+
+# ── power-bank driver module (IP5356-class boost + charger + gauge) ──────────
+def power_bank_module(id, x, y, chip="IP5356", label="power bank driver",
+                      sub="USB-A out · USB-C charge in", pct="87",
+                      charge_port="USB-C"):
+    """5 V boost + Li-ion charger breakout with a 2-digit fuel gauge, as used to
+    build a DIY power bank. Ports 'batp' / 'batn' on the W side (the cell) and
+    'vout' / 'gnd' on the E side (the USB-A output, taken off with a pigtail).
+
+    The charge connector and the on-board enable button are DRAWN but are not
+    ports: nothing in the circuit wires to them, so the DRC must not demand it."""
+    w2, h2 = 190, 112
+    body = BBox(x - w2, y - h2, x + w2, y + h2)
+    ports = {
+        "batp": Port("batp", x - w2, y - 46, "W"),
+        "batn": Port("batn", x - w2, y + 46, "W"),
+        "vout": Port("vout", x + w2, y - 46, "E"),
+        "gnd":  Port("gnd",  x + w2, y + 46, "E"),
+    }
+    bag = LabelBag()
+    bag.add(x, y + h2 + 8, label, "pinsm", "mt")
+    bag.add(x, y + h2 + 26, sub, "tiny", "mt", C["muted"])
+
+    def draw(p):
+        p.rrect((x - w2, y - h2, x + w2, y + h2), 10, fill=(24, 92, 62),
+                outline=C["outline"], width=3)
+        # 2-digit battery-percent display
+        p.rrect((x - 96, y - 88, x + 4, y - 34), 5, fill=(22, 22, 26),
+                outline=(70, 70, 78), width=2)
+        p.text((x - 56, y - 61), f"{pct}%", font="pin", fill=(250, 190, 40), anchor="mm")
+        # the 2R2 boost inductor and the controller
+        p.circle(x + 96, y - 58, 30, fill=(120, 120, 128), outline=C["outline"], width=3)
+        p.text((x + 96, y - 58), "2R2", font="tiny", fill=(30, 30, 34), anchor="mm")
+        p.rrect((x - 40, y + 4, x + 40, y + 70), 4, fill=(30, 30, 36),
+                outline=(80, 80, 88), width=2)
+        p.text((x, y + 37), chip, font="pinsm", fill=C["light"], anchor="mm")
+        # enable button + charge connector, drawn only (not ports)
+        p.circle(x - 132, y + 40, 20, fill=(70, 70, 78), outline=C["outline"], width=2)
+        p.text((x - 132, y + 74), "ON", font="tiny", fill=C["light"], anchor="mm")
+        p.rrect((x + 74, y + 24, x + w2 - 4, y + 60), 8, fill=(200, 200, 208),
+                outline=C["outline"], width=2)
+        p.text((x + 132, y + 78), charge_port, font="tiny", fill=C["light"], anchor="mm")
+        for nm, lbl in (("batp", "B+"), ("batn", "B−")):
+            pt = ports[nm]
+            _pin(p, pt.x, pt.y, hi=True)
+            p.text((pt.x + 16, pt.y), lbl, font="tiny", fill=C["light"], anchor="lm")
+        for nm, lbl in (("vout", "5V"), ("gnd", "G")):
+            pt = ports[nm]
+            _pin(p, pt.x, pt.y, hi=True)
+            p.text((pt.x - 16, pt.y), lbl, font="tiny", fill=C["light"], anchor="rm")
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=14, label_boxes=bag.boxes())
+
+
+# ── audio power-amplifier module (LM386-class mono breakout) ─────────────────
+def amp_module(id, x, y, chip="LM386", label="audio amp module",
+               sub="gain pot · 5-12 V"):
+    """Mono class-AB amplifier breakout: gain trimmer at one end, speaker screw
+    terminal at the other. Ports 'sig' (W, line in), 'vcc' (N), 'gnd' (S) and
+    'out' (E, the live side of the speaker terminal — the other side of that
+    terminal IS the module's ground)."""
+    w2, h2 = 150, 100
+    body = BBox(x - w2, y - h2, x + w2, y + h2)
+    ports = {
+        "sig": Port("sig", x - w2, y, "W"),
+        "vcc": Port("vcc", x - 60, y - h2, "N"),
+        # 'gnd' sits well east of centre so its escape stub clears the module's
+        # own caption, which is centred under the body.
+        "gnd": Port("gnd", x + 112, y + h2, "S"),
+        "out": Port("out", x + w2, y, "E"),
+    }
+    bag = LabelBag()
+    bag.add(x, y + h2 + 8, label, "pinsm", "mt")
+    bag.add(x, y + h2 + 26, sub, "tiny", "mt", C["muted"])
+
+    def draw(p):
+        p.rrect((x - w2, y - h2, x + w2, y + h2), 10, fill=(30, 78, 66),
+                outline=C["outline"], width=3)
+        # gain trimmer (the blue 10 k "103" pot) at the input end
+        p.rrect((x - w2 + 18, y - 34, x - w2 + 82, y + 30), 4, fill=(40, 70, 190),
+                outline=C["outline"], width=2)
+        p.circle(x - w2 + 50, y - 2, 18, fill=(230, 230, 236), outline=C["outline"], width=2)
+        p.line([(x - w2 + 50, y - 18), (x - w2 + 50, y + 14)], fill=C["outline"], width=3)
+        p.text((x - w2 + 50, y + 48), "GAIN", font="tiny", fill=C["light"], anchor="mm")
+        # the chip
+        p.rrect((x - 24, y - 40, x + 56, y + 24), 4, fill=(30, 30, 36),
+                outline=(80, 80, 88), width=2)
+        p.text((x + 16, y - 8), chip, font="pinsm", fill=C["light"], anchor="mm")
+        # power-on LED + speaker screw terminal
+        p.circle(x - 24, y + 56, 10, fill=(230, 70, 60), outline=C["outline"], width=2)
+        p.rrect((x + w2 - 62, y - 40, x + w2 - 6, y + 40), 5, fill=(70, 200, 120),
+                outline=C["outline"], width=2)
+        for dy in (-20, 20):
+            p.circle(x + w2 - 34, y + dy, 11, fill=(200, 200, 208), outline=C["outline"], width=2)
+            p.line([(x + w2 - 42, y + dy), (x + w2 - 26, y + dy)], fill=C["outline"], width=2)
+        for nm, lbl, anch, dx, dy in (("sig", "IN", "lm", 16, 0),
+                                      ("vcc", "V+", "mm", 0, 18),
+                                      ("gnd", "G", "mm", 0, -18),
+                                      ("out", "SPK", "rm", -16, 0)):
+            pt = ports[nm]
+            _pin(p, pt.x, pt.y, hi=True)
+            p.text((pt.x + dx, pt.y + dy), lbl, font="tiny", fill=C["light"], anchor=anch)
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=14, label_boxes=bag.boxes())
+
+
+# ── loudspeaker (moving coil, e.g. a 4 Ω 3 W mini full-range) ────────────────
+def speaker(id, x, y, label="speaker", sub="4 Ω · 3 W", r=62):
+    """Drawn as a rectangular mini full-range driver: frame, surround and cone.
+    Ports 'p' and 'n' on the W side (the two-wire Dupont pigtail)."""
+    w2 = h2 = r + 14
+    body = BBox(x - w2, y - h2, x + w2, y + h2)
+    ports = {"p": Port("p", x - w2, y - 34, "W"),
+             "n": Port("n", x - w2, y + 34, "W")}
+    bag = LabelBag()
+    bag.add(x, y + h2 + 8, label, "pinsm", "mt")
+    bag.add(x, y + h2 + 26, sub, "tiny", "mt", C["muted"])
+
+    def draw(p):
+        p.rrect((x - w2, y - h2, x + w2, y + h2), 8, fill=(38, 38, 44),
+                outline=C["outline"], width=3)
+        p.circle(x, y, r, fill=(58, 58, 66), outline=(24, 24, 28), width=3)
+        p.circle(x, y, r - 16, fill=(96, 96, 104), outline=(24, 24, 28), width=2)
+        p.circle(x, y, 18, fill=(150, 150, 158), outline=(24, 24, 28), width=2)
+        for nm, col in (("p", (200, 40, 40)), ("n", (30, 30, 34))):
+            pt = ports[nm]
+            _pin(p, pt.x, pt.y, hi=True)
+            p.text((pt.x + 16, pt.y), "+" if nm == "p" else "−",
+                   font="pin", fill=(250, 120, 110) if nm == "p" else C["light"],
+                   anchor="lm")
+        bag.draw(p)
+
+    return Component(id, body, ports, draw, clearance=14, label_boxes=bag.boxes())
