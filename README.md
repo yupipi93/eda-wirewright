@@ -1,19 +1,42 @@
+<div align="center">
+
+<img src="docs/images/logo.svg" width="80" alt="wirewright logo"/>
+
 # eda-wirewright
 
-**A declarative schematic / wiring-diagram engine with an automatic orthogonal
-router and a geometric DRC.** You describe *what connects to what* — components,
-typed ports, nets — and wirewright figures out *how to draw it*: clean orthogonal
-wires that **never cross a component body, never run on top of each other, never
-leave a pin unconnected, and keep their distance**. Every diagram is
-**DRC-validated before it is saved**, so a broken image can't slip out.
+**Describe *what connects to what* — wirewright figures out *how to draw it*.**
 
-Built to be driven by humans *and* by AI models: alongside the Python API there
-is a declarative **JSON contract format**, a **CLI**, and an **MCP server** so an
-agent (e.g. Claude) can call it as a tool.
+A declarative schematic / wiring-diagram engine with an automatic orthogonal
+router and a geometric DRC. Feed it a JSON contract, get back a clean,
+CAD-looking PNG — or a structured list of everything that's wrong with your circuit.
 
-> **☁️ Live API:** **`https://wirewright.scv.multitecua.com`** — `POST` a contract,
-> get a PNG. Public, no auth, agent-ready. Open it in a browser for the landing
-> page; see [Hosted API](#4--http-api-hosted--best-for-agents-in-the-cloud) below.
+[![CI](https://github.com/yupipi93/eda-wirewright/actions/workflows/ci.yml/badge.svg)](https://github.com/yupipi93/eda-wirewright/actions/workflows/ci.yml)
+[![Python 3.9–3.12](https://img.shields.io/badge/python-3.9%E2%80%933.12-blue)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Live API](https://img.shields.io/badge/API-live-brightgreen)](https://wirewright.scv.multitecua.com)
+[![MCP server](https://img.shields.io/badge/MCP-server-8A2BE2)](#for-ai-models)
+
+[Quickstart](#quickstart) · [Live API](#the-hosted-api) · [For AI models](#for-ai-models) · [The DRC guarantee](#the-drc-guarantee) · [How it works](#how-it-works)
+
+<img src="docs/images/lemon-piano-v6-hero.png" alt="Lemon Piano V6 wiring diagram — battery power + amplified speaker, auto-routed by wirewright"/>
+
+*A real project diagram — LiPo battery → power-bank module → pi filter → Arduino Nano → LED bar → amp → speaker.
+Auto-routed and DRC-validated by wirewright from a declarative contract. **Never hand-drawn.***
+
+</div>
+
+---
+
+## Why
+
+Hand-placing wire coordinates always reproduces the same faults: wires over
+resistors, confusing crossings, wires too close, pins left visually
+unconnected. wirewright kills all of them **structurally**:
+
+- 🚧 **Component bodies are routing obstacles** — a wire physically cannot cross one.
+- 📏 **Spacing is a hard rule** — parallel wires of different nets keep their distance.
+- 🔌 **Every port in a net is checked** for a real wire endpoint — no floating pins.
+- 🧪 **Every diagram is DRC-validated before it is saved** — if it would have a fault, it **doesn't build**.
 
 ```
                  wirewright render circuit.json -o circuit.png
@@ -22,18 +45,20 @@ agent (e.g. Claude) can call it as a tool.
   ports, nets)
 ```
 
-The same engine renders a one-LED blinky or a 55-net Arduino game — see `examples/`.
+The same engine renders a one-LED blinky or a 55-net Arduino game:
 
----
+| From a 24-line JSON contract… | …to a 55-net rat's nest, still zero DRC violations |
+|---|---|
+| ![Minimal example — LED on D13](docs/images/led-blink-minimal.png) | ![Lemon Piano V5 — 55 nets](docs/images/lemon-piano-v5-55nets.png) |
+| `examples/json/led_blink.json` | `examples/lemon_piano.py` — 36 / 42 / 55 nets |
 
-## Why
+Built to be driven by humans *and* by AI models: alongside the Python API there
+is a declarative **JSON contract format**, a **CLI**, an **MCP server**, and a
+**hosted HTTP API** so an agent (e.g. Claude) can call it as a tool.
 
-Hand-placing wire coordinates always reproduces the same faults: wires over
-resistors, confusing crossings, wires too close, resistors left visually
-unconnected, wires under components. wirewright kills all of them **structurally**
-— component bodies are routing obstacles, spacing is a hard rule, and every port
-in a net is checked for a real connection. If a diagram would have a fault, it
-**doesn't build**.
+> [!TIP]
+> **☁️ Live API:** **`https://wirewright.scv.multitecua.com`** — `POST` a contract,
+> get a PNG. Public, no auth, agent-ready. Open it in a browser for the landing page.
 
 ## Install
 
@@ -44,7 +69,7 @@ pip install -e '.[dev,mcp]'
 ```
 
 Rendering needs the **DejaVu** fonts (`fonts-dejavu-core` on Debian/Ubuntu; the
-Docker image bundles them). Runtime dependency: Pillow only.
+Docker image bundles them). Runtime dependency: **Pillow only**.
 
 ## Quickstart
 
@@ -56,7 +81,7 @@ wirewright validate examples/json/led_blink.json --json     # DRC only, machine-
 wirewright components                                        # list component types + ports
 ```
 
-A minimal contract:
+A minimal contract, and what it renders to:
 
 ```json
 {
@@ -78,6 +103,10 @@ A minimal contract:
   ]
 }
 ```
+
+<div align="center">
+<img src="docs/images/led-blink-minimal.png" width="640" alt="Rendered output of the minimal contract"/>
+</div>
 
 Full format: **[docs/contract-format.md](docs/contract-format.md)** · JSON Schema:
 **[schema/schematic.schema.json](schema/schematic.schema.json)**.
@@ -113,7 +142,7 @@ docker run --rm -v "$PWD":/work wirewright render /work/circuit.json -o /work/ci
 docker run --rm wirewright components
 ```
 
-### 4 · HTTP API (hosted — best for agents in the cloud)
+### 4 · The hosted API
 
 `POST` a contract, get a PNG back. Runs on Cloud Run at
 **`https://wirewright.scv.multitecua.com`** (public, no auth — call it from
@@ -140,8 +169,7 @@ curl -X POST 'https://wirewright.scv.multitecua.com/render?format=json' -d @circ
 | `POST /render` | route + DRC + render → `image/png` (or JSON+base64 with `?format=json`) |
 
 Errors are structured JSON with the right status (`400` bad contract, `422` DRC
-failed with `violations[]`), so an agent can fix and retry. Open the base URL in a
-browser for a minimal landing page (usage + links). Run it yourself:
+failed with `violations[]`), so an agent can fix and retry. Run it yourself:
 `docker build -f deploy/Dockerfile -t wirewright-api . && docker run -p 8080:8080 wirewright-api`.
 
 ## For AI models
@@ -177,11 +205,24 @@ wirewright is designed so an LLM can produce diagrams reliably:
 
 ## Component catalogue
 
-`arduino_nano`, `led`, `resistor`, `push_button`, `spdt_switch`, `buzzer`,
-`relay_module`, `water_pump`, `lemon_key`, `clip_box`. Run `wirewright components`
-for ports + parameters. Adding one is a small factory in
+20 built-in types, each with typed ports — run `wirewright components` for
+ports + parameters:
+
+| family | types |
+|---|---|
+| boards | `arduino_nano` |
+| passives | `resistor` · `capacitor` · `inductor` · `diode` |
+| indicators & sound | `led` · `buzzer` · `speaker` · `amp_module` |
+| input | `push_button` · `spdt_switch` · `rotary_encoder` · `lemon_key` · `clip_box` |
+| power | `battery` · `power_bank_module` · `power_jack` |
+| modules & actuators | `relay_module` · `water_pump` · `ultrasonic` |
+
+Plus decorations (`legend`, `deco.panel`, notes, dashed annotation arrows) for
+self-explanatory diagrams.
+
+Adding a component is a small factory in
 [`src/wirewright/library.py`](src/wirewright/library.py) (a body box + typed
-ports + a draw function) — then it works everywhere (Python, JSON, CLI, MCP).
+ports + a draw function) — then it works everywhere (Python, JSON, CLI, MCP, HTTP API).
 
 ## Configuration (parametrised)
 
@@ -201,7 +242,7 @@ JSON `config` block, via CLI flags, or a `Config` object:
 wirewright render circuit.json --pitch 12 --bend 20 --spacing 8
 ```
 
-## How it works (one paragraph)
+## How it works
 
 Everything snaps to a routing grid. Component bodies (plus a clearance halo) are
 hard obstacles; each pin gets a mandatory perpendicular **escape stub**. Nets are
@@ -224,6 +265,13 @@ make docker    # build the image
 
 CI (GitHub Actions) runs lint + tests across Python 3.9–3.12, renders every
 example (DRC must pass), and builds the Docker image.
+
+## Related projects
+
+| repo | what |
+|---|---|
+| [eda-pcb-designer](https://github.com/yupipi93/eda-pcb-designer) | The sibling tool: a deterministic KiCad-9 **PCB** pipeline (placement → autoroute → DRC → gerbers), same engine + hosted-API + agent-protocol pattern |
+| [arduino-lemon-piano](https://github.com/yupipi93/arduino-lemon-piano) | The project wirewright was extracted from — every wiring diagram in it is rendered by wirewright |
 
 ## Licence
 
