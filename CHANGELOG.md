@@ -31,6 +31,13 @@ All notable changes to wirewright. Format loosely follows Keep a Changelog.
   covered by `tests/test_power_components.py`. First consumer:
   arduino-lemon-piano V5.5's filtered-supply diagram.
 
+## [0.1.4] — 2026-10-27
+
+### Security
+- Hosted API image (`deploy/Dockerfile`): rebuilt on a current `python:3.12-slim`
+  (Debian 13.7: openssl 3.5.7, glibc deb13u4, perl, util-linux, sqlite, pcre2,
+  gzip fixes) and Pillow raised to at least 13.0.0. No code change.
+
 ## [0.1.3] — 2026-07-29
 
 ### Added
