@@ -13,8 +13,10 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
 
-# Engine + HTTP API deps (Flask + gunicorn).
-RUN pip install --no-cache-dir '.[api]'
+# Engine + HTTP API deps (Flask + gunicorn). Pillow floor 13.0.0 for its
+# security fixes (CVE-2026-112900, -112393, -112403, -96639); kept here, not in
+# pyproject, because Pillow 13 drops Python 3.10 and the library supports 3.9+.
+RUN pip install --no-cache-dir '.[api]' 'pillow>=13.0.0'
 
 # Cloud Run injects PORT (default 8080). Non-root for good measure.
 RUN useradd -m runner
